@@ -1,0 +1,45 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "brcm,bcm2835", "brcm,bcm2708", "brcm,bcm2709", "brcm,bcm2711";
+
+	/* Enable the Pi I2S block (GPIO18 BCK, 19 LRCK, 20 DIN, 21 DOUT) */
+	fragment@0 {
+		target = <&i2s_clk_producer>;	/* older kernels: <&i2s> */
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	/* The two codecs (neither has a control bus) */
+	fragment@1 {
+		target-path = "/";
+		__overlay__ {
+			pcm1808m: pcm1808-master {
+				#sound-dai-cells = <0>;
+				compatible = "custom,pcm1808-master";
+				status = "okay";
+			};
+			pcm5102a: pcm5102a {
+				#sound-dai-cells = <0>;
+				compatible = "ti,pcm5102a";
+				status = "okay";
+			};
+
+
+		};
+	};
+
+	/* The one card tying them together */
+	fragment@2 {
+		target = <&sound>;
+		__overlay__ {
+			compatible = "custom,rpi-duplex-card";
+			i2s-controller = <&i2s_clk_producer>;	/* older: <&i2s> */
+			adc-codec = <&pcm1808m>;
+			dac-codec = <&pcm5102a>;
+			status = "okay";
+		};
+	};
+};
